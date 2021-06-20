@@ -1,72 +1,92 @@
-cpu_usage_data = []
-cpu_usage_data_x_values = []
-memory_usage_data = []
-memory_usage_data_x_values = []
-swap_usage_data = []
-swap_usage_data_x_values = []
-disk_usage_data = []
-disk_usage_data_x_values = []
+cpu_usage_data = [];
+cpu_usage_data_x_values = [];
+cpu_temperature_data = [];
+cpu_temperature_data_x_values = [];
+memory_usage_data = [];
+memory_usage_data_x_values = [];
+swap_usage_data = [];
+swap_usage_data_x_values = [];
+disk_usage_data = [];
+disk_usage_data_x_values = [];
 
 function prune_datasets() {
     dataset_size = parseInt($("#dataset-size").val())
     while (cpu_usage_data.length >= dataset_size && dataset_size != -1) {
-        cpu_usage_data.shift()
-        cpu_usage_data_x_values.shift()
-        memory_usage_data.shift()
-        memory_usage_data_x_values.shift()
-        swap_usage_data.shift()
-        swap_usage_data_x_values.shift()
-        disk_usage_data.shift()
-        disk_usage_data_x_values.shift()
+        cpu_usage_data.shift();
+        cpu_usage_data_x_values.shift();
+        cpu_temperature_data.shift();
+        cpu_temperature_data_x_values.shift();
+        memory_usage_data.shift();
+        memory_usage_data_x_values.shift();
+        swap_usage_data.shift();
+        swap_usage_data_x_values.shift();
+        disk_usage_data.shift();
+        disk_usage_data_x_values.shift();
     }
 }
 
-function get_color(percent) {
-    if (percent <= 75)
-        return "green"
-    else if (percent <= 90)
-        return "yellow"
-    return "red"
+function get_color(percent, high, very_high) {
+    if (percent <= high)
+        return "green";
+    else if (percent<= very_high)
+        return "yellow";
+    return "red";
+}
+
+function color_cpu_temperature_and_update_chart() {
+    cpu_temperature = $("#cpu-temperature").text();
+    if (cpu_temperature != "N/A") {
+        cpu_temperature = parseFloat(cpu_temperature.substring(0, cpu_temperature.length -3));
+        color = get_color(cpu_temperature, 70, 80);
+        $("#cpu-temperature").css({color: color, opacity: 1});
+        cpu_temperature_data.push(cpu_temperature);
+        cpu_temperature_data_x_values.push("");
+        render_chart("cpu-temperature-chart", cpu_temperature_data, cpu_temperature_data_x_values, 120, color);
+    }
+    else {
+        $("#cpu-temperature").css({color: "white", opacity: 0.6});
+        render_chart("cpu-temperature-chart", cpu_temperature_data, cpu_temperature_data_x_values, 120, "#777");
+    }
 }
 
 function color_cpu_usage_and_update_chart() {
-    cpu_usage = $("#cpu-usage").text()
-    cpu_usage = parseFloat(cpu_usage.substring(0, cpu_usage.length -2))
-    color = get_color(cpu_usage)
-    $("#cpu-usage").css({color: color})
-    cpu_usage_data.push(cpu_usage)
-    cpu_usage_data_x_values.push("")
-    render_chart("cpu-usage-chart", cpu_usage_data, cpu_usage_data_x_values, color)
+    cpu_usage = $("#cpu-usage").text();
+    cpu_usage = parseFloat(cpu_usage.substring(0, cpu_usage.length -2));
+    color = get_color(cpu_usage, 75, 90);
+    $("#cpu-usage").css({color: color});
+    cpu_usage_data.push(cpu_usage);
+    cpu_usage_data_x_values.push("");
+    render_chart("cpu-usage-chart", cpu_usage_data, cpu_usage_data_x_values, 100, color);
 }
 
 function color_memory_usage_and_update_chart(used_memory_percent) {
-    color = get_color(used_memory_percent)
-    $("#used-memory").css({color: color})
-    $("#free-memory").css({color: color})
-    memory_usage_data.push(used_memory_percent)
-    memory_usage_data_x_values.push("")
-    render_chart("memory-usage-chart", memory_usage_data, memory_usage_data_x_values, color)
+    color = get_color(used_memory_percent, 75, 90);
+    $("#used-memory").css({color: color});
+    $("#free-memory").css({color: color});
+    memory_usage_data.push(used_memory_percent);
+    memory_usage_data_x_values.push("");
+    render_chart("memory-usage-chart", memory_usage_data, memory_usage_data_x_values, 100, color);
 }
 
 function color_swap_usage_and_update_chart(used_swap_percent) {
-    color = get_color(used_swap_percent)
-    $("#used-swap").css({color: color})
-    $("#free-swap").css({color: color})
-    swap_usage_data.push(used_swap_percent)
-    swap_usage_data_x_values.push("")
-    render_chart("swap-usage-chart", swap_usage_data, swap_usage_data_x_values, color)
+    color = get_color(used_swap_percent, 75, 90);
+    $("#used-swap").css({color: color});
+    $("#free-swap").css({color: color});
+    swap_usage_data.push(used_swap_percent);
+    swap_usage_data_x_values.push("");
+    render_chart("swap-usage-chart", swap_usage_data, swap_usage_data_x_values, 100, color);
 }
 
 function color_disk_usage_and_update_chart(used_disk_percent) {
-    color = get_color(used_disk_percent)
-    $("#used-disk").css({color: color})
-    $("#free-disk").css({color: color})
-    disk_usage_data.push(used_disk_percent)
-    disk_usage_data_x_values.push("")
-    render_chart("disk-usage-chart", disk_usage_data, disk_usage_data_x_values, color)
+    color = get_color(used_disk_percent, 75, 90);
+    $("#used-disk").css({color: color});
+    $("#free-disk").css({color: color});
+    disk_usage_data.push(used_disk_percent);
+    disk_usage_data_x_values.push("");
+    render_chart("disk-usage-chart", disk_usage_data, disk_usage_data_x_values, 100, color);
 }
 
-function render_chart(id, cpu_usage_array, x_values, color) {
+function render_chart(id, cpu_usage_array, x_values, y_max, color) {
     new Chart(id, {
       type: "line",
       data: {
@@ -82,7 +102,7 @@ function render_chart(id, cpu_usage_array, x_values, color) {
         scales: {
             yAxes : [{
                 ticks : {
-                    max : 100,    
+                    max : y_max,    
                     min : 0
                 }
             }]
@@ -93,6 +113,7 @@ function render_chart(id, cpu_usage_array, x_values, color) {
 
 
 color_cpu_usage_and_update_chart();
+color_cpu_temperature_and_update_chart();
 color_memory_usage_and_update_chart(parseFloat($("#used-memory-percent").text()));
 color_swap_usage_and_update_chart(parseFloat($("#used-swap-percent").text()));
 color_disk_usage_and_update_chart(parseFloat($("#used-disk-percent").text()));
@@ -109,7 +130,9 @@ setInterval(function(){
             $("#uptime").text(dynamic_values.uptime);
             $("#cpu-speed-current").text(dynamic_values.cpu_speed_current);
             $("#cpu-usage").text(dynamic_values.cpu_usage);
+            $("#cpu-temperature").text(dynamic_values.cpu_temperature);
             color_cpu_usage_and_update_chart()
+            color_cpu_temperature_and_update_chart()
             $("#used-memory-amount").text(dynamic_values.used_memory);
             $("#used-memory-percent").text(dynamic_values.used_memory_percent);
             $("#free-memory-amount").text(dynamic_values.free_memory);

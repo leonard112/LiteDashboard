@@ -1,9 +1,15 @@
 from flask import Flask, render_template
+import sys
 import datetime
 import time
 import socket
 import platform
 import psutil
+
+
+NODE_NAME = None
+IP_ADDRESS = None
+
 
 app = Flask(__name__)
 
@@ -32,9 +38,42 @@ def get_uptime():
     return f"{seconds} Seconds"
 
 
+def get_node_name():
+    if NODE_NAME != None: return NODE_NAME
+    return platform.uname().node
+
+
+def get_cpu():
+    processor = platform.uname().processor
+    if processor == '': return platform.uname().machine
+    return processor
+
+
 def get_cpu_speed(cpu_speed):
     if cpu_speed >= 1000: return str(round(cpu_speed/1000, 2)) + " GHz"
     return str(round(cpu_speed, 2)) + " MHz"
+
+
+def get_average_cpu_temperature():
+    try:
+        cpu_core_temperatures = psutil.sensors_temperatures()['coretemp']
+        cpu_core_temperatures_sum = 0
+        for cpu_core_temperature in cpu_core_temperatures:
+            cpu_core_temperatures_sum += cpu_core_temperature.current
+        return str(cpu_core_temperatures_sum / len(cpu_core_temperatures)) + " °C"
+    except: return "N/A"
+
+
+# https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+def get_ip_address():
+    if IP_ADDRESS != None: return IP_ADDRESS
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]
+        s.close()
+        return ip_address
+    except: return socket.gethostbyname(socket.gethostname())
 
 
 def convert_units(bytes):
@@ -47,21 +86,21 @@ def convert_units(bytes):
 
 @app.route("/")
 def index():
-    sys_info = platform.uname()
     return render_template(
         'index.html', 
-        system_name=sys_info.node, 
+        node_name=get_node_name(), 
         uptime=get_uptime(),
-        os=sys_info.system, 
-        os_version=sys_info.version,
-        cpu=sys_info.processor,
-        cpu_arch=sys_info.machine,
+        os=platform.uname().system, 
+        os_version=platform.uname().version,
+        cpu=get_cpu(),
+        cpu_arch=platform.uname().machine,
         cpu_cores=psutil.cpu_count(logical=False),
         logical_processors=psutil.cpu_count(),
-        cpu_usage=psutil.cpu_percent(1),
         cpu_speed_current=get_cpu_speed(psutil.cpu_freq().current),
         cpu_speed_minimum=get_cpu_speed(psutil.cpu_freq().min),
         cpu_speed_maximum=get_cpu_speed(psutil.cpu_freq().max),
+        cpu_temperature=get_average_cpu_temperature(),
+        cpu_usage=psutil.cpu_percent(1),
         total_memory=convert_units(psutil.virtual_memory().total),
         used_memory=convert_units(psutil.virtual_memory().used),
         used_memory_percent=psutil.virtual_memory().percent,
@@ -72,14 +111,14 @@ def index():
         used_swap_percent=psutil.swap_memory().percent,
         free_swap=convert_units(psutil.swap_memory().free),
         free_swap_percent=(100 - psutil.swap_memory().percent),
-        storage_mount_point=psutil.disk_partitions()[0].mountpoint,
+        storage_device=psutil.disk_partitions()[0].device,
         file_system_type=psutil.disk_partitions()[0].fstype,
         total_disk=convert_units(psutil.disk_usage('/').total),
         used_disk=convert_units(psutil.disk_usage('/').used),
         used_disk_percent=psutil.disk_usage('/').percent,
         free_disk=convert_units(psutil.disk_usage('/').free),
         free_disk_percent=(100 - psutil.disk_usage('/').percent),
-        ip_address=socket.gethostbyname(socket.gethostname()),
+        ip_address=get_ip_address(),
         data_sent=convert_units(psutil.net_io_counters().bytes_sent),
         data_recieved=convert_units(psutil.net_io_counters().bytes_recv),
         packets_sent=psutil.net_io_counters().packets_sent,
@@ -92,6 +131,7 @@ def memory_usage():
     return {
                 "uptime": get_uptime(),
                 "cpu_speed_current": get_cpu_speed(psutil.cpu_freq().current),
+                "cpu_temperature": get_average_cpu_temperature(),
                 "cpu_usage": str(psutil.cpu_percent(1)) + " %",
                 "used_memory": convert_units(psutil.virtual_memory().used),
                 "used_memory_percent": str(psutil.virtual_memory().percent),
@@ -113,4 +153,7 @@ def memory_usage():
 
 
 if __name__ == "__main__":
-    app.run()
+    if len(sys.argv) >= 3:
+        NODE_NAME = sys.argv[1]
+        IP_ADDRESS = sys.argv[2]
+    app.run(host='0.0.0.0')
