@@ -34,6 +34,11 @@ h1, body {
 	left: 75px;
 	top: -1px;
 }
+.time-range-label {
+	width: 100%;
+	margin-bottom: 3px;
+	color: #999;
+}
 select {
 	background-color: #444;
 	border: none;
@@ -72,11 +77,13 @@ select {
 	padding-top: 0;
 	top: 2px;
 }
+.double-tile { padding-bottom: 10px; }
 .tile-right { padding-left: 5px; }
 .left-right-tile { 
 	height: 95%;
 	padding-bottom: 25px;
 }
+canvas { margin-bottom: 25px; }
 .dim {
 	opacity: 0.6;
 }
@@ -116,12 +123,16 @@ h3 {
 		font-size: 25px; 
 		text-align: center;
 	}
+	.time-range-label { text-align: center; }
 	select { 
 		margin-bottom: 15px; 
 		width: 100%;
 	}
 	.double-tile { padding: 0; }
-	.left-right-tile { height: auto; }
+	.left-right-tile { 
+		height: auto; 
+		padding-bottom: 35px;
+	}
 	.tile-left {
 		padding-right: 15px;
 		padding-left: 15px;

@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 import sys
-import datetime
+from datetime import datetime
 import time
 import socket
 import platform
@@ -119,11 +119,11 @@ def index():
         free_disk=convert_units(psutil.disk_usage('/').free),
         free_disk_percent=(100 - psutil.disk_usage('/').percent),
         ip_address=get_ip_address(),
-        data_sent=convert_units(psutil.net_io_counters().bytes_sent),
-        data_recieved=convert_units(psutil.net_io_counters().bytes_recv),
+        bytes_sent=convert_units(psutil.net_io_counters().bytes_sent),
+        bytes_recieved=convert_units(psutil.net_io_counters().bytes_recv),
         packets_sent=psutil.net_io_counters().packets_sent,
         packets_recieved=psutil.net_io_counters().packets_recv,
-        year=datetime.datetime.now().year)
+        year=datetime.now().year)
 
 
 @app.route("/dynamic_data")
@@ -145,8 +145,8 @@ def memory_usage():
                 "used_disk_percent": str(psutil.disk_usage('/').percent),
                 "free_disk": convert_units(psutil.disk_usage('/').free),
                 "free_disk_percent": str((100 - psutil.disk_usage('/').percent)),
-                "data_sent": convert_units(psutil.net_io_counters().bytes_sent),
-                "data_recieved": convert_units(psutil.net_io_counters().bytes_recv),
+                "bytes_sent": convert_units(psutil.net_io_counters().bytes_sent),
+                "bytes_recieve": convert_units(psutil.net_io_counters().bytes_recv),
                 "packets_sent": psutil.net_io_counters().packets_sent,
                 "packets_recieved": psutil.net_io_counters().packets_recv
             }

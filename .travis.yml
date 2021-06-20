@@ -1,17 +1,14 @@
+os: linux
+dist: trusty
+services:
+  - docker
+
 jobs:
   include:
-    - os: linux
-      arch: amd64
-      services:
-        - docker
-      dist: trusty
+    - arch: amd64
       env:
         - ARCH=amd64
-    - os: linux
-      arch: arm64
-      services:
-        - docker
-      dist: trusty
+    - arch: arm64
       env:
         - ARCH=arm64
 script: 

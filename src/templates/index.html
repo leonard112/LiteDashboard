@@ -45,11 +45,11 @@
 				<div class="row">
 
 				</div>
-					<select id="dataset-size">
-						<option value="100" selected>Max Dataset Size For Graphs</option>
-						<option value="10">10</option>
-						<option value="100">100</option>
-						<option value="1000">1000</option>
+					<span class="time-range-label">Graph Time Range:</span>
+					<select id="time-range">
+						<option value="12" selected>60 Seconds</option>
+						<option value="360">30 Minutes</option>
+						<option value="720">1 Hour</option>
 						<option value="-1">Unlimited</option>
 				  	</select>
 				</div>
@@ -156,14 +156,14 @@
 				<div class="row data-row">
 					<div class="col-lg-4"><b>Network Send:</b></div>
 					<div class="col-lg-8" >
-						<span id="data-sent">{{data_sent}}</span>
+						<span id="bytes-sent">{{bytes_sent}}</span>
 						<span class="dim">(<span id="packets-sent">{{packets_sent}}</span> Packets)</span>
 					</div>
 				</div>
 				<div class="row">
 					<div class="col-lg-4"><b>Network Recieve:</b></div>
 					<div class="col-lg-8" >
-						<span id="data-recieved">{{data_recieved}}</span>
+						<span id="bytes-recieved">{{bytes_recieved}}</span>
 						<span class="dim">(<span id="packets-recieved">{{packets_recieved}}</span> Packets)</span>
 					</div>
 				</div>
