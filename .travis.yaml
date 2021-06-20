@@ -6,9 +6,13 @@ jobs:
     - os: linux
       arch: amd64
       dist: trusty
-      script: cd docker build . --tag litedashboard:1.4-amd64
+      env:
+        ARCH=amd64
     - os: linux
       arch: arm64
       dist: trusty
-      script: cd docker build . --tag litedashboard:1.4-arm
+      env:
+        ARCH=arm64
+      
+ script: cd docker build . --tag litedashboard:1.4-$ARCH
 
