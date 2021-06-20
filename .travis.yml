@@ -1,9 +1,7 @@
 os: linux
 dist: focal
-addons:
-  apt:
-    packages:
-      - docker-ce
+services:
+  - docker
 
 jobs:
   include:
