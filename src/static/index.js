@@ -151,9 +151,9 @@ setInterval(function(){
             $("#free-disk-amount").text(dynamic_values.free_disk);
             $("#free-disk-percent").text(dynamic_values.free_disk_percent);
             color_disk_usage_and_update_chart(parseFloat(dynamic_values.used_disk_percent));
-            $("#bytes-sent").text(dynamic_values.data_sent);
+            $("#bytes-sent").text(dynamic_values.bytes_sent);
             $("#bytes-sent").css({opacity: 1});
-            $("#bytes-recieved").text(dynamic_values.data_recieved);
+            $("#bytes-recieved").text(dynamic_values.bytes_recieved);
             $("#bytes-recieved").css({opacity: 1});
             $("#packets-sent").text(dynamic_values.packets_sent);
             $("#packets-recieved").text(dynamic_values.packets_recieved);
