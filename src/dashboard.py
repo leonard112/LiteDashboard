@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 import sys
+from subprocess import run as shell
 from datetime import datetime
 import time
 import socket
@@ -45,7 +46,9 @@ def get_node_name():
 
 def get_cpu():
     processor = platform.uname().processor
-    if processor == '': return platform.uname().machine
+    if processor == '' or processor == platform.uname().machine: 
+        output = shell('lscpu | grep "Model name:" | awk "{print $2}"', capture_output=True, text=True, shell=True)
+        return output.stdout.split("Model name:")[-1]
     return processor
 
 
@@ -56,7 +59,8 @@ def get_cpu_speed(cpu_speed):
 
 def get_average_cpu_temperature():
     try:
-        cpu_core_temperatures = psutil.sensors_temperatures()['coretemp']
+        try: cpu_core_temperatures = psutil.sensors_temperatures()['coretemp']
+        except: cpu_core_temperatures = psutil.sensors_temperatures()['cpu_thermal']
         cpu_core_temperatures_sum = 0
         for cpu_core_temperature in cpu_core_temperatures:
             cpu_core_temperatures_sum += cpu_core_temperature.current

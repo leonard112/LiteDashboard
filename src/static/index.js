@@ -80,6 +80,8 @@ function color_disk_usage_and_update_chart(used_disk_percent) {
 }
 
 function render_chart(id, cpu_usage_array, y_max, color) {
+    let graph_text = universal_x_values[0] + " - " + universal_x_values.slice(-1)[0];
+    if (color == "#777") graph_text = "N/A";
     new Chart(id, {
       type: "line",
       data: {
@@ -103,7 +105,7 @@ function render_chart(id, cpu_usage_array, y_max, color) {
         },
         title: {
             display: true,
-            text: universal_x_values[0] + " - " + universal_x_values.slice(-1)[0]
+            text: graph_text
         }
       }
     });
