@@ -11,7 +11,6 @@ before_install:
   - curl --silent -L "https://github.com/docker/buildx/releases/download/v0.3.0/buildx-v0.3.0.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
   - chmod a+x ~/.docker/cli-plugins/docker-buildx
 script:
-  - pip install --upgrade pip
   - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   - docker buildx create --use
   - docker buildx build --platform linux/arm64/v8,linux/amd64 --tag carcaral47/litedashboard:1.4 .
