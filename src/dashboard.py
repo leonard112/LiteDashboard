@@ -64,7 +64,7 @@ def get_average_cpu_temperature():
         cpu_core_temperatures_sum = 0
         for cpu_core_temperature in cpu_core_temperatures:
             cpu_core_temperatures_sum += cpu_core_temperature.current
-        return str(cpu_core_temperatures_sum / len(cpu_core_temperatures)) + " °C"
+        return str(round(cpu_core_temperatures_sum / len(cpu_core_temperatures), 2)) + " °C"
     except: return "N/A"
 
 
@@ -103,7 +103,7 @@ def index():
         cpu_speed_current=get_cpu_speed(psutil.cpu_freq().current),
         cpu_speed_minimum=get_cpu_speed(psutil.cpu_freq().min),
         cpu_speed_maximum=get_cpu_speed(psutil.cpu_freq().max),
-        cpu_temperature=round(get_average_cpu_temperature(), 2),
+        cpu_temperature=get_average_cpu_temperature(),
         cpu_usage=psutil.cpu_percent(1),
         total_memory=convert_units(psutil.virtual_memory().total),
         used_memory=convert_units(psutil.virtual_memory().used),
