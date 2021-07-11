@@ -6,7 +6,7 @@ html {
 body { display:none; }
 h1, body {
 	margin: 0;
-	background-color: #111;
+	background-image: linear-gradient(to bottom right, #111, #211);
 	color: #ddd;
 }
 .container {
@@ -40,16 +40,22 @@ h1, body {
 	color: #999;
 }
 select {
-	background-color: #444;
+	background-color: rgba(0,0,0,0);
 	border: none;
 	color: white;
 	border-radius: 5px;
 	padding: 10px;
 	margin-bottom: 35px;
+	border: solid;
+	border-width: 0.5px;
+	border-color: #666;
+}
+option {
+	background-color: #222;
 }
 .footer 
 {
-    margin-top: 60px;
+	margin-top: 0;
     padding: 20px;
     color: #999;
     left: 0;
@@ -72,12 +78,14 @@ select {
 .tile {
 	padding: 47px;
 	padding-bottom: 35px;
-	background-color: #222;
 	margin-bottom: 20px;
 	padding-top: 0;
 	top: 2px;
+	border-radius: 10px;
+	border: solid;
+	border-width: 0.5px;
+	border-color: #555;
 }
-.double-tile { padding-bottom: 10px; }
 .tile-right { padding-left: 5px; }
 .left-right-tile { 
 	height: 95%;
@@ -116,6 +124,10 @@ h3 {
 	margin-bottom: 40px;
 }
 
+@media only screen and (max-width: 1200px) and (min-width: 992px) {
+	.double-tile { padding-bottom: 2px; }
+}
+
 @media only screen and (max-width: 992px) {
 	.row { padding: 10px; }
 	.logo-container { width: 310px; }
@@ -145,9 +157,5 @@ h3 {
 	.title {
 		font-size: 35px;
 		top: 7px;
-	}
-	.footer {
-		margin-top: 0;
-		margin-bottom: 10px;
 	}
 }

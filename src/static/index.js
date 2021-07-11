@@ -79,33 +79,69 @@ function color_disk_usage_and_update_chart(used_disk_percent) {
                      disk_usage_data, 100);
 }
 
+function destroy_all_charts() {
+    Chart.helpers.each(Chart.instances, function(instance){
+        instance.destroy();
+    });
+}
+
 function render_chart(id, cpu_usage_array, y_max, color) {
     let graph_text = universal_x_values[0] + " - " + universal_x_values.slice(-1)[0];
-    if (color == "#777") graph_text = "N/A";
+    fill_color = ""
+    if (color == "#777") {
+        graph_text = "N/A";
+        fill_color = "rgba(119, 119, 119, 0.05)";
+    }
+    else if (color == "green") fill_color = "rgba(0, 255, 0, 0.05)";
+    else if (color == "yellow") fill_color = "rgba(255, 255, 0, 0.05)";
+    else if (color == "red") fill_color = "rgba(255, 0, 0, 0.05)";
+    grid_color = '#333'
     new Chart(id, {
       type: "line",
       data: {
         labels: universal_x_values,
         datasets: [{ 
-          data: cpu_usage_array,
-          borderColor: color,
-          fill: false
+            label: graph_text,
+            data: cpu_usage_array,
+            borderColor: color,
+            backgroundColor: fill_color,
+            borderWidth: 1,
+            fill: true
         }]
       },
       options: {
-        legend: {display: false},
-        scales: {
-            xAxes : [{display: false}],
-            yAxes : [{
-                ticks : {
-                    max : y_max,    
-                    min : 0
-                }
-            }]
+        animation: {
+            duration: 0
         },
-        title: {
-            display: true,
-            text: graph_text
+        elements: {
+            point:{
+                backgroundColor: color,
+                radius: 2
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: graph_text
+            },
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                ticks: { display: false },
+                grid: { color: grid_color }
+            },
+            y: {
+                max : y_max,    
+                min : 0,
+                ticks: { display: false },
+                grid: { color: grid_color }
+            },
+            yAxes : {
+                max : y_max,    
+                min : 0,
+                grid: { drawBorder: false }
+            },
         }
       }
     });
@@ -124,9 +160,11 @@ $("body").show();
 let xhttp = new XMLHttpRequest();
 setInterval(function(){ 
     xhttp.onreadystatechange = function() {
+        scroll_position = $('html').scrollTop()
         if (this.readyState == 4) {
             prune_datasets();
             universal_x_values.push(new Date().toLocaleString());
+            destroy_all_charts();
         }
         if (this.readyState == 4 && this.status == 200) {
             dynamic_values = JSON.parse(this.responseText);
@@ -191,6 +229,7 @@ setInterval(function(){
             $("#packets-sent").text("N/A");
             $("#packets-recieved").text("N/A");
         }
+        $('html').scrollTop(scroll_position)
     };
     xhttp.open("GET", "dynamic_data", true);
     xhttp.send();}, 

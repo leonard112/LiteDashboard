@@ -15,28 +15,42 @@ IP_ADDRESS = None
 app = Flask(__name__)
 
 
+def format_label(value, plural_label):
+    if value == 1: return plural_label[:-1]
+    return plural_label
+
+
 def get_uptime():
     uptime = time.time() - psutil.boot_time()
+    seconds_label = "Seconds"
     years = int(uptime/31557600)
+    years_label = format_label(years, "Years")
     months = int(uptime%31557600/2629800)
+    months_label = format_label(months, "Months")
     weeks = int(uptime%31557600%2629800/604800)
+    weeks_label = format_label(weeks, "Weeks")
     days = int(uptime%31557600%2629800%604800/86400)
+    days_label = format_label(days, "Days")
     hours = int(uptime%31557600%2629800%604800%86400/3600)
+    hours_label = format_label(hours, "Hours")
     minutes = int(uptime%31557600%2629800%604800%86400%3600/60)
+    minutes_label = format_label(minutes, "Minutes")
     seconds = int(uptime%31557600%2629800%604800%86400%3600%60)
+    seconds_label = format_label(seconds, "Seconds")
+    formatted_uptime = f"{seconds} {seconds_label}"
+    if uptime >= 60: 
+        formatted_uptime = f"{minutes} {minutes_label}, {formatted_uptime}"
+    if uptime >= 3600:
+        formatted_uptime = f"{hours} {hours_label}, {formatted_uptime}"
+    if uptime >= 86400:
+        formatted_uptime = f"{days} {days_label}, {formatted_uptime}"
+    if uptime >= 604800:
+        formatted_uptime = f"{weeks} {weeks_label}, {formatted_uptime}"
+    if uptime >= 2629800: 
+        formatted_uptime = f"{months} {months_label}, {formatted_uptime}"
     if uptime >= 31557600: 
-        return f"{years} Years {months} Months {weeks} Weeks {days} Days {hours} Hours {minutes} Minutes {seconds} Seconds"
-    elif uptime >= 2629800: 
-        return f"{months} Months {weeks} Weeks {days} Days {hours} Hours {minutes} Minutes {seconds} Seconds"
-    elif uptime >= 604800:
-        return f"{weeks} Weeks {days} Days {hours} Hours {minutes} Minutes {seconds} Seconds"
-    elif uptime >= 86400:
-        return f"{days} Days {hours} Hours {minutes} Minutes {seconds} Seconds"
-    elif uptime >= 3600:
-        return f"{hours} Hours {minutes} Minutes {seconds} Seconds"
-    elif uptime >= 60: 
-        return f"{minutes} Minutes {seconds} Seconds"
-    return f"{seconds} Seconds"
+        formatted_uptime = f"{years} {years_label}, {formatted_uptime}"
+    return formatted_uptime
 
 
 def get_node_name():
