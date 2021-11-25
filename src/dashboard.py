@@ -28,29 +28,30 @@ def timestamp():
 
 
 def format_label(value, plural_label):
-    if value == 1: return plural_label[:-1]
+    if value == 1:
+        return plural_label[:-1]
     return plural_label
 
 
 def get_uptime():
     uptime = time() - psutil.boot_time()
     seconds_label = "Seconds"
-    years = int(uptime/31557600)
+    years = int(uptime / 31557600)
     years_label = format_label(years, "Years")
-    months = int(uptime%31557600/2629800)
+    months = int(uptime % 31557600 / 2629800)
     months_label = format_label(months, "Months")
-    weeks = int(uptime%31557600%2629800/604800)
+    weeks = int(uptime % 31557600 % 2629800 / 604800)
     weeks_label = format_label(weeks, "Weeks")
-    days = int(uptime%31557600%2629800%604800/86400)
+    days = int(uptime % 31557600 % 2629800 % 604800 / 86400)
     days_label = format_label(days, "Days")
-    hours = int(uptime%31557600%2629800%604800%86400/3600)
+    hours = int(uptime % 31557600 % 2629800 % 604800 % 86400 / 3600)
     hours_label = format_label(hours, "Hours")
-    minutes = int(uptime%31557600%2629800%604800%86400%3600/60)
+    minutes = int(uptime % 31557600 % 2629800 % 604800 % 86400 % 3600 / 60)
     minutes_label = format_label(minutes, "Minutes")
-    seconds = int(uptime%31557600%2629800%604800%86400%3600%60)
+    seconds = int(uptime % 31557600 % 2629800 % 604800 % 86400 % 3600 % 60)
     seconds_label = format_label(seconds, "Seconds")
     formatted_uptime = f"{seconds} {seconds_label}"
-    if uptime >= 60: 
+    if uptime >= 60:
         formatted_uptime = f"{minutes} {minutes_label}, {formatted_uptime}"
     if uptime >= 3600:
         formatted_uptime = f"{hours} {hours_label}, {formatted_uptime}"
@@ -58,81 +59,97 @@ def get_uptime():
         formatted_uptime = f"{days} {days_label}, {formatted_uptime}"
     if uptime >= 604800:
         formatted_uptime = f"{weeks} {weeks_label}, {formatted_uptime}"
-    if uptime >= 2629800: 
+    if uptime >= 2629800:
         formatted_uptime = f"{months} {months_label}, {formatted_uptime}"
-    if uptime >= 31557600: 
+    if uptime >= 31557600:
         formatted_uptime = f"{years} {years_label}, {formatted_uptime}"
     return formatted_uptime
 
 
 def get_node_name():
-    if NODE_NAME != None: return NODE_NAME
+    if NODE_NAME is not None:
+        return NODE_NAME
     return platform.uname().node
 
 
 def get_cpu():
     processor = platform.uname().processor
-    if processor == '' or processor == platform.uname().machine: 
-        output = shell('lscpu | grep "Model name:" | awk "{print $2}"', capture_output=True, text=True, shell=True)
+    if processor == '' or processor == platform.uname().machine:
+        output = shell(
+            'lscpu | grep "Model name:" | awk "{print $2}"',
+            capture_output=True,
+            text=True,
+            shell=True)
         return output.stdout.split("Model name:")[-1]
     return processor
 
 
 def get_cpu_speed(cpu_speed):
-    if cpu_speed >= 1000: return str(round(cpu_speed/1000, 2)) + " GHz"
+    if cpu_speed >= 1000:
+        return str(round(cpu_speed / 1000, 2)) + " GHz"
     return str(round(cpu_speed, 2)) + " MHz"
 
 
 def get_average_cpu_temperature():
     try:
-        try: cpu_core_temperatures = psutil.sensors_temperatures()['coretemp']
-        except: cpu_core_temperatures = psutil.sensors_temperatures()['cpu_thermal']
+        try:
+            cpu_core_temperatures = psutil.sensors_temperatures()['coretemp']
+        except BaseException:
+            cpu_core_temperatures = psutil.sensors_temperatures()[
+                'cpu_thermal']
         cpu_core_temperatures_sum = 0
         for cpu_core_temperature in cpu_core_temperatures:
             cpu_core_temperatures_sum += cpu_core_temperature.current
         return round(cpu_core_temperatures_sum / len(cpu_core_temperatures), 2)
-    except: return "N/A"
+    except BaseException:
+        return "N/A"
 
 
 def get_memory_usage_percent():
-    return (psutil.virtual_memory().used/psutil.virtual_memory().total)*100
+    return (psutil.virtual_memory().used / psutil.virtual_memory().total) * 100
 
 
 def get_swap_usage_percent():
-    return (psutil.swap_memory().used/psutil.swap_memory().total)*100
+    return (psutil.swap_memory().used / psutil.swap_memory().total) * 100
 
 
 def get_disk_usage_percent():
-    return (psutil.disk_usage('/').used/psutil.disk_usage('/').total)*100
+    return (psutil.disk_usage('/').used / psutil.disk_usage('/').total) * 100
 
 
 # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
 def get_ip_address():
-    if IP_ADDRESS != None: return IP_ADDRESS
+    if IP_ADDRESS is not None:
+        return IP_ADDRESS
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip_address = s.getsockname()[0]
         s.close()
         return ip_address
-    except: return socket.gethostbyname(socket.gethostname())
+    except BaseException:
+        return socket.gethostbyname(socket.gethostname())
 
 
 def convert_units(bytes):
-    if bytes >= 1000000000000: return str(round(bytes/1000000000000, 2)) + " TB"
-    if bytes >= 1000000000: return str(round(bytes/1000000000, 2)) + " GB"
-    if bytes >= 1000000: return str(round(bytes/1000000, 2)) + " MB"
-    if bytes >= 1000: return str(round(bytes/1000, 2)) + " KB"
+    if bytes >= 1000000000000:
+        return str(round(bytes / 1000000000000, 2)) + " TB"
+    if bytes >= 1000000000:
+        return str(round(bytes / 1000000000, 2)) + " GB"
+    if bytes >= 1000000:
+        return str(round(bytes / 1000000, 2)) + " MB"
+    if bytes >= 1000:
+        return str(round(bytes / 1000, 2)) + " KB"
     return str(bytes) + " bytes"
 
 
 @app.route("/")
 def index():
     return render_template(
-        'index.html', 
-        node_name=get_node_name(), 
+        'index.html',
+        node_name=get_node_name(),
         uptime=get_uptime(),
-        os=platform.uname().system, 
+        os=platform.uname().system,
         os_version=platform.uname().version,
         cpu=get_cpu(),
         cpu_arch=platform.uname().machine,
@@ -172,7 +189,7 @@ def index():
 def memory_usage():
     payload = []
     for i in range(5):
-        data =  {
+        data = {
             "cpu_usage": psutil.cpu_percent(),
             "timestamp": timestamp(),
             "uptime": get_uptime(),

@@ -104,7 +104,7 @@ function render_chart(id, data_set, y_max, color) {
     ticks = data_set_size/25
     if (data_set_size == 50)
         ticks = 10
-    buffer = Array(data_set_size - data_set.length).fill("N/A")
+    buffer = Array(data_set_size - data_set.length).fill("N/A");
     chart = {
       type: "line",
       data: {
