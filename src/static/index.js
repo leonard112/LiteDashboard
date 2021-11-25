@@ -1,13 +1,37 @@
+let uptime = null;
+let cpu_frequency = null;
+let used_memory = null;
+let free_memory = null;
+let used_swap = null;
+let free_swap = null;
+let used_disk = null;
+let free_disk = null;
+let bytes_sent = null;
+let bytes_recieved = null;
+let packets_sent = null;
+let packets_recieved = null;
+let data_set_size = 300;
 let cpu_usage_data = [];
 let cpu_temperature_data = [];
 let memory_usage_data = [];
 let swap_usage_data = [];
 let disk_usage_data = [];
+let x_axis = new Array(120).fill(null);
 let universal_x_values = [];
+let charts = {};
 
-function prune_datasets() {
-    let dataset_size = parseInt($("#time-range").val())
-    while (cpu_usage_data.length > dataset_size && dataset_size != -1) {
+function clear_data_sets() {
+    cpu_usage_data = [];
+    cpu_temperature_data = [];
+    memory_usage_data = [];
+    swap_usage_data = [];
+    disk_usage_data = [];
+    universal_x_values = [];
+}
+
+function prune_data_sets() {
+    let data_set_size = parseInt($("#time-range").val())
+    while (cpu_usage_data.length > data_set_size && data_set_size != -1) {
         cpu_usage_data.shift();
         cpu_temperature_data.shift();
         memory_usage_data.shift();
@@ -35,59 +59,39 @@ function color_and_render(element_ids, chart_id, data_element, unit_offset, high
         render_chart(chart_id, data, y_max, color);
     }
     else {
-        for (element_id of element_ids) $(element_id).css({color: "white", opacity: 0.6});
+        for (element_id of element_ids) $(element_id).css({color: "white", opacity: .6});
         render_chart(chart_id, data, y_max, "#777");
     }
 }
 
-function color_cpu_temperature_and_update_chart() {
-    let cpu_temperature = $("#cpu-temperature").text();
-    if (cpu_temperature != "N/A")
-        cpu_temperature_data.push(parseFloat(cpu_temperature.substring(0, cpu_temperature.length - 3)));
-    else cpu_temperature_data.push(null);
-    color_and_render(["#cpu-temperature"], "cpu-temperature-chart", cpu_temperature, 3, 70, 80, 
+function color_cpu_temperature_and_update_chart(cpu_temperature) {
+    color_and_render(["#cpu-temperature"], "cpu-temperature-chart", cpu_temperature, null, 70, 80, 
                      cpu_temperature_data, 120);
 }
 
-function color_cpu_usage_and_update_chart() {
-    let cpu_usage = $("#cpu-usage").text();
-    if (cpu_usage != "N/A")
-        cpu_usage_data.push(parseFloat(cpu_usage.substring(0, cpu_usage.length - 2)));
-    else cpu_usage_data.push(null);
-    color_and_render(["#cpu-usage"], "cpu-usage-chart", cpu_usage, 2, 75, 90, 
+function color_cpu_usage_and_update_chart(cpu_usage) {
+    color_and_render(["#cpu-usage"], "cpu-usage-chart", cpu_usage, null, 75, 90, 
                      cpu_usage_data, 100);
 }
 
 function color_memory_usage_and_update_chart(used_memory_percent) {
-    if (used_memory_percent != "N/A") memory_usage_data.push(used_memory_percent);
-    else memory_usage_data.push(null);
     color_and_render(["#used-memory", "#free-memory"], "memory-usage-chart", used_memory_percent, null, 75, 90, 
                      memory_usage_data, 100);
 }
 
 function color_swap_usage_and_update_chart(used_swap_percent) {
-    if (used_swap_percent != "N/A") swap_usage_data.push(used_swap_percent);
-    else swap_usage_data.push(null);
     color_and_render(["#used-swap", "#free-swap"], "swap-usage-chart", used_swap_percent, null, 75, 90, 
                      swap_usage_data, 100);
 }
 
 function color_disk_usage_and_update_chart(used_disk_percent) {
-    if (used_disk_percent != "N/A") disk_usage_data.push(used_disk_percent);
-    else disk_usage_data.push(null);
     color_and_render(["#used-disk", "#free-disk"], "disk-usage-chart", used_disk_percent, null, 75, 90, 
                      disk_usage_data, 100);
 }
 
-function destroy_all_charts() {
-    Chart.helpers.each(Chart.instances, function(instance){
-        instance.destroy();
-    });
-}
-
-function render_chart(id, cpu_usage_array, y_max, color) {
+function render_chart(id, data_set, y_max, color) {
     let graph_text = universal_x_values[0] + " - " + universal_x_values.slice(-1)[0];
-    fill_color = ""
+    let fill_color = ""
     if (color == "#777") {
         graph_text = "N/A";
         fill_color = "rgba(119, 119, 119, 0.05)";
@@ -96,17 +100,23 @@ function render_chart(id, cpu_usage_array, y_max, color) {
     else if (color == "yellow") fill_color = "rgba(255, 255, 0, 0.05)";
     else if (color == "red") fill_color = "rgba(255, 0, 0, 0.05)";
     grid_color = '#333'
-    new Chart(id, {
+    let data_set_size = parseInt($("#time-range").val())
+    ticks = data_set_size/25
+    if (data_set_size == 50)
+        ticks = 10
+    buffer = Array(data_set_size - data_set.length).fill("N/A")
+    chart = {
       type: "line",
       data: {
-        labels: universal_x_values,
+        labels: universal_x_values.concat(buffer),
         datasets: [{ 
             label: graph_text,
-            data: cpu_usage_array,
+            data: data_set.concat(buffer),
             borderColor: color,
             backgroundColor: fill_color,
             borderWidth: 1,
-            fill: true
+            fill: true,
+            lineTension: .5
         }]
       },
       options: {
@@ -116,7 +126,7 @@ function render_chart(id, cpu_usage_array, y_max, color) {
         elements: {
             point:{
                 backgroundColor: color,
-                radius: 2
+                radius: 0
             }
         },
         plugins: {
@@ -128,7 +138,10 @@ function render_chart(id, cpu_usage_array, y_max, color) {
         },
         scales: {
             x: {
-                ticks: { display: false },
+                ticks: { 
+                    display: false,
+                    maxTicksLimit: ticks
+                },
                 grid: { color: grid_color }
             },
             y: {
@@ -144,69 +157,146 @@ function render_chart(id, cpu_usage_array, y_max, color) {
             },
         }
       }
-    });
+    }
+    if (charts[id])
+        charts[id].destroy();
+    charts[id] = new Chart(id, chart);
+    maximum_value = Math.max(...data_set);
+    if (!isNaN(maximum_value)) {
+        if (maximum_value < y_max)
+            y_max = maximum_value;
+    }
+    minimum_value = Math.min(...data_set);
+    if (!isNaN(minimum_value)) {
+        if (minimum_value < 0)
+            y_min = 0;
+        else
+            y_min = minimum_value;
+    }
+    if (y_min == y_max) {
+        y_max += 1;
+        y_min -= 1;
+        if (y_min < 0)
+            y_min = 0;
+    }
+    if (maximum_value == Number.NEGATIVE_INFINITY)
+        y_max = 1;
+    if (minimum_value == Number.POSITIVE_INFINITY)
+        y_min = 0;
+    chart.options.scales.y.max = y_max;
+    chart.options.scales.yAxes.max = y_max;
+    chart.options.scales.y.min = y_min;
+    chart.options.scales.yAxes.min = y_min;
+    id = id + "-scaled"
+    if (charts[id])
+        charts[id].destroy();
+    charts[id] = new Chart(id, chart);
 }
 
+prune_data_sets();
 universal_x_values.push(new Date().toLocaleString());
-color_cpu_usage_and_update_chart();
-color_cpu_temperature_and_update_chart();
-color_memory_usage_and_update_chart(parseFloat($("#used-memory-percent").text()));
-color_swap_usage_and_update_chart(parseFloat($("#used-swap-percent").text()));
-color_disk_usage_and_update_chart(parseFloat($("#used-disk-percent").text()));
+cpu_usage = $("#cpu-usage").text();
+cpu_usage = parseFloat(cpu_usage.substring(0, cpu_usage.length-2));
+cpu_usage_data.push(cpu_usage)
+color_cpu_usage_and_update_chart(cpu_usage_data.at(-1));
+cpu_temperature = $("#cpu-temperature").text();
+if (cpu_temperature != "N/A")
+    cpu_temperature = parseFloat(cpu_temperature.substring(0, cpu_temperature.length-3));
+cpu_temperature_data.push(cpu_temperature);
+color_cpu_temperature_and_update_chart(cpu_temperature_data.at(-1));
+memory_usage_data.push(parseFloat($("#used-memory-percent").text()))
+color_memory_usage_and_update_chart(memory_usage_data.at(-1));
+swap_usage_data.push(parseFloat($("#used-swap-percent").text()))
+color_swap_usage_and_update_chart(swap_usage_data.at(-1));
+disk_usage_data.push(parseFloat($("#used-disk-percent").text()))
+color_disk_usage_and_update_chart(disk_usage_data.at(-1));
 
 
 $("body").show();
 
-let xhttp = new XMLHttpRequest();
-setInterval(function(){ 
-    xhttp.onreadystatechange = function() {
-        scroll_position = $('html').scrollTop()
-        if (this.readyState == 4) {
-            prune_datasets();
-            universal_x_values.push(new Date().toLocaleString());
-            destroy_all_charts();
-        }
-        if (this.readyState == 4 && this.status == 200) {
-            dynamic_values = JSON.parse(this.responseText);
-            $("#uptime").text(dynamic_values.uptime);
+refresh();
+
+function set_values(dynamic_values) {
+    universal_x_values.push(dynamic_values.timestamp); 
+    uptime = dynamic_values.uptime;
+    cpu_frequency = dynamic_values.cpu_speed_current;
+    cpu_usage_data.push(dynamic_values.cpu_usage);
+    cpu_temperature_data.push(dynamic_values.cpu_temperature);
+    memory_usage_data.push(dynamic_values.used_memory_percent);
+    used_memory = dynamic_values.used_memory;
+    free_memory = dynamic_values.free_memory;
+    swap_usage_data.push(dynamic_values.used_swap_percent);
+    used_swap = dynamic_values.used_swap;
+    free_swap = dynamic_values.free_swap;
+    disk_usage_data.push(dynamic_values.used_disk_percent);
+    used_disk = dynamic_values.used_disk;
+    free_disk = dynamic_values.free_disk;
+    bytes_sent = dynamic_values.bytes_sent;
+    bytes_recieved = dynamic_values.bytes_recieved;
+    packets_sent = dynamic_values.packets_sent;
+    packets_recieved = dynamic_values.packets_recieved;
+}
+
+async function refresh() {
+    while(true) {
+        try {
+            let response = await fetch("/dynamic_data");
+            let response_json = await response.json();
+            $("#error").css({display: "none"});
+            payload = response_json.payload;
+            payload.forEach(set_values);
+            prune_data_sets();
+            $("html").height($("html").height()) 
+            $("#uptime").text(uptime);
             $("#uptime").css({opacity: 1});
-            $("#cpu-speed-current").text(dynamic_values.cpu_speed_current);
+            $("#cpu-speed-current").text(cpu_frequency);
             $("#cpu-speed-current").css({opacity: 1});
-            $("#cpu-usage").text(dynamic_values.cpu_usage);
-            $("#cpu-temperature").text(dynamic_values.cpu_temperature);
-            color_cpu_usage_and_update_chart()
-            color_cpu_temperature_and_update_chart()
-            $("#used-memory-amount").text(dynamic_values.used_memory);
-            $("#used-memory-percent").text(dynamic_values.used_memory_percent);
-            $("#free-memory-amount").text(dynamic_values.free_memory);
-            $("#free-memory-percent").text(dynamic_values.free_memory_percent);
-            color_memory_usage_and_update_chart(parseFloat(dynamic_values.used_memory_percent));
-            $("#used-swap-amount").text(dynamic_values.used_swap);
-            $("#used-swap-percent").text(dynamic_values.used_swap_percent);
-            $("#free-swap-amount").text(dynamic_values.free_swap);
-            $("#free-swap-percent").text(dynamic_values.free_swap_percent);
-            color_swap_usage_and_update_chart(parseFloat(dynamic_values.used_swap_percent));
-            $("#used-disk-amount").text(dynamic_values.used_disk);
-            $("#used-disk-percent").text(dynamic_values.used_disk_percent);
-            $("#free-disk-amount").text(dynamic_values.free_disk);
-            $("#free-disk-percent").text(dynamic_values.free_disk_percent);
-            color_disk_usage_and_update_chart(parseFloat(dynamic_values.used_disk_percent));
-            $("#bytes-sent").text(dynamic_values.bytes_sent);
+            $("#cpu-usage").text(cpu_usage_data.at(-1) + " %");
+            if (cpu_temperature_data.at(-1) == "N/A")
+                $("#cpu-temperature").text(cpu_temperature_data.at(-1));
+            else
+                $("#cpu-temperature").text(cpu_temperature_data.at(-1) + " °C");
+            color_cpu_usage_and_update_chart(cpu_usage_data.at(-1))
+            color_cpu_temperature_and_update_chart(cpu_temperature_data.at(-1));
+            $("#used-memory-amount").text(used_memory);
+            memory_usage_percent = memory_usage_data.at(-1).toFixed(1);
+            $("#used-memory-percent").text(memory_usage_percent + " %");
+            $("#free-memory-amount").text(free_memory);
+            $("#free-memory-percent").text((100 - memory_usage_percent).toFixed(1) + " %");
+            color_memory_usage_and_update_chart(swap_usage_data.at(-1));
+            $("#used-swap-amount").text(used_swap);
+            swap_usage_percent = swap_usage_data.at(-1).toFixed(1);
+            $("#used-swap-percent").text(swap_usage_percent + " %");
+            $("#free-swap-amount").text(free_swap);
+            $("#free-swap-percent").text((100 - swap_usage_percent).toFixed(1) + " %");
+            color_swap_usage_and_update_chart(swap_usage_data.at(-1));
+            $("#used-disk-amount").text(used_disk);
+            disk_usage_percent = disk_usage_data.at(-1).toFixed(1);
+            $("#used-disk-percent").text(disk_usage_percent + " %");
+            $("#free-disk-amount").text(free_disk);
+            $("#free-disk-percent").text((100 - disk_usage_percent).toFixed(1) + " %");
+            color_disk_usage_and_update_chart(disk_usage_data.at(-1));
+            $("#bytes-sent").text(bytes_sent);
             $("#bytes-sent").css({opacity: 1});
-            $("#bytes-recieved").text(dynamic_values.bytes_recieved);
+            $("#bytes-recieved").text(bytes_recieved);
             $("#bytes-recieved").css({opacity: 1});
-            $("#packets-sent").text(dynamic_values.packets_sent);
-            $("#packets-recieved").text(dynamic_values.packets_recieved);
+            $("#packets-sent").text(packets_sent + " Packets");
+            $("#packets-recieved").text(packets_recieved + " Packets");
+            $("html").height("auto") 
         }
-        else if (this.readyState == 4){
+        catch (error) {
+            $("html").height($("html").height());
+            $("#error").css({display: "block"});
+            clear_data_sets();
+            prune_data_sets();
             $("#uptime").text("N/A");
             $("#uptime").css({opacity: 0.6});
             $("#cpu-speed-current").text("N/A");
             $("#cpu-speed-current").css({opacity: 0.6});
             $("#cpu-usage").text("N/A");
             $("#cpu-temperature").text("N/A");
-            color_cpu_usage_and_update_chart()
-            color_cpu_temperature_and_update_chart()
+            color_cpu_usage_and_update_chart("N/A");
+            color_cpu_temperature_and_update_chart("N/A");
             $("#used-memory-amount").text("N/A");
             $("#used-memory-percent").text("N/A");
             $("#free-memory-amount").text("N/A");
@@ -228,9 +318,7 @@ setInterval(function(){
             $("#bytes-recieved").css({opacity: 0.6});
             $("#packets-sent").text("N/A");
             $("#packets-recieved").text("N/A");
+            $("html").height("auto");
         }
-        $('html').scrollTop(scroll_position)
-    };
-    xhttp.open("GET", "dynamic_data", true);
-    xhttp.send();}, 
-5000);
+    }
+}

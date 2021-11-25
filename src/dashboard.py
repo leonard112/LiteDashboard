@@ -2,7 +2,7 @@ from flask import Flask, render_template
 import sys
 from subprocess import run as shell
 from datetime import datetime
-import time
+from time import sleep, time
 import socket
 import platform
 import psutil
@@ -15,13 +15,25 @@ IP_ADDRESS = None
 app = Flask(__name__)
 
 
+def timestamp():
+    timestamp = datetime.now()
+    month = timestamp.strftime("%m")
+    day = timestamp.strftime("%d")
+    year = timestamp.strftime("%Y")
+    hour = timestamp.strftime("%I")
+    minute = timestamp.strftime("%M")
+    second = timestamp.strftime("%S")
+    am_pm = timestamp.strftime("%p")
+    return f"{month}/{day}/{year}, {hour}:{minute}:{second} {am_pm}"
+
+
 def format_label(value, plural_label):
     if value == 1: return plural_label[:-1]
     return plural_label
 
 
 def get_uptime():
-    uptime = time.time() - psutil.boot_time()
+    uptime = time() - psutil.boot_time()
     seconds_label = "Seconds"
     years = int(uptime/31557600)
     years_label = format_label(years, "Years")
@@ -78,8 +90,20 @@ def get_average_cpu_temperature():
         cpu_core_temperatures_sum = 0
         for cpu_core_temperature in cpu_core_temperatures:
             cpu_core_temperatures_sum += cpu_core_temperature.current
-        return str(round(cpu_core_temperatures_sum / len(cpu_core_temperatures), 2)) + " °C"
+        return round(cpu_core_temperatures_sum / len(cpu_core_temperatures), 2)
     except: return "N/A"
+
+
+def get_memory_usage_percent():
+    return (psutil.virtual_memory().used/psutil.virtual_memory().total)*100
+
+
+def get_swap_usage_percent():
+    return (psutil.swap_memory().used/psutil.swap_memory().total)*100
+
+
+def get_disk_usage_percent():
+    return (psutil.disk_usage('/').used/psutil.disk_usage('/').total)*100
 
 
 # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
@@ -118,7 +142,7 @@ def index():
         cpu_speed_minimum=get_cpu_speed(psutil.cpu_freq().min),
         cpu_speed_maximum=get_cpu_speed(psutil.cpu_freq().max),
         cpu_temperature=get_average_cpu_temperature(),
-        cpu_usage=psutil.cpu_percent(1),
+        cpu_usage=psutil.cpu_percent(),
         total_memory=convert_units(psutil.virtual_memory().total),
         used_memory=convert_units(psutil.virtual_memory().used),
         used_memory_percent=psutil.virtual_memory().percent,
@@ -146,28 +170,32 @@ def index():
 
 @app.route("/dynamic_data")
 def memory_usage():
-    return {
-                "uptime": get_uptime(),
-                "cpu_speed_current": get_cpu_speed(psutil.cpu_freq().current),
-                "cpu_temperature": get_average_cpu_temperature(),
-                "cpu_usage": str(psutil.cpu_percent(1)) + " %",
-                "used_memory": convert_units(psutil.virtual_memory().used),
-                "used_memory_percent": str(psutil.virtual_memory().percent),
-                "free_memory": convert_units(psutil.virtual_memory().free),
-                "free_memory_percent": str((100 - psutil.virtual_memory().percent)),
-                "used_swap": convert_units(psutil.swap_memory().used),
-                "used_swap_percent": str(psutil.swap_memory().percent),
-                "free_swap": convert_units(psutil.swap_memory().free),
-                "free_swap_percent": str((100 - psutil.swap_memory().percent)),
-                "used_disk": convert_units(psutil.disk_usage('/').used),
-                "used_disk_percent": str(psutil.disk_usage('/').percent),
-                "free_disk": convert_units(psutil.disk_usage('/').free),
-                "free_disk_percent": str((100 - psutil.disk_usage('/').percent)),
-                "bytes_sent": convert_units(psutil.net_io_counters().bytes_sent),
-                "bytes_recieve": convert_units(psutil.net_io_counters().bytes_recv),
-                "packets_sent": psutil.net_io_counters().packets_sent,
-                "packets_recieved": psutil.net_io_counters().packets_recv
-            }
+    payload = []
+    for i in range(5):
+        data =  {
+            "cpu_usage": psutil.cpu_percent(),
+            "timestamp": timestamp(),
+            "uptime": get_uptime(),
+            "cpu_speed_current": get_cpu_speed(psutil.cpu_freq().current),
+            "cpu_temperature": get_average_cpu_temperature(),
+            "used_memory": convert_units(psutil.virtual_memory().used),
+            "used_memory_percent": get_memory_usage_percent(),
+            "free_memory": convert_units(psutil.virtual_memory().free),
+            "used_swap": convert_units(psutil.swap_memory().used),
+            "used_swap_percent": get_swap_usage_percent(),
+            "free_swap": convert_units(psutil.swap_memory().free),
+            "used_disk": convert_units(psutil.disk_usage('/').used),
+            "used_disk_percent": get_disk_usage_percent(),
+            "free_disk": convert_units(psutil.disk_usage('/').free),
+            "bytes_sent": convert_units(psutil.net_io_counters().bytes_sent),
+            "bytes_recieved": convert_units(psutil.net_io_counters().bytes_recv),
+            "packets_sent": psutil.net_io_counters().packets_sent,
+            "packets_recieved": psutil.net_io_counters().packets_recv
+        }
+        payload.append(data)
+        sleep(.2)
+    print("Sending payload.")
+    return {"payload": payload}
 
 
 if __name__ == "__main__":

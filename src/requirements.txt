@@ -1,2 +1,2 @@
-flask
-psutil
+flask>=2.0.2
+psutil>=5.8.0

@@ -13,4 +13,4 @@ jobs:
         - ARCH=arm64
         
 script:
-  - docker build . --tag litedashboard:1.4-$ARCH
+  - docker build . --tag litedashboard:1.5-$ARCH
