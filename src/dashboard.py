@@ -105,16 +105,29 @@ def get_average_cpu_temperature():
         return "N/A"
 
 
+def get_percent(used, total):
+    try:
+        return (used / total) * 100
+    except ZeroDivisionError:
+        return 0
+
+
 def get_memory_usage_percent():
-    return (psutil.virtual_memory().used / psutil.virtual_memory().total) * 100
+    return get_percent(
+        psutil.virtual_memory().used,
+        psutil.virtual_memory().total)
 
 
 def get_swap_usage_percent():
-    return (psutil.swap_memory().used / psutil.swap_memory().total) * 100
+    return get_percent(
+        psutil.swap_memory().used,
+        psutil.swap_memory().total)
 
 
 def get_disk_usage_percent():
-    return (psutil.disk_usage('/').used / psutil.disk_usage('/').total) * 100
+    return get_percent(
+        psutil.disk_usage('/').used,
+        psutil.disk_usage('/').total)
 
 
 # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
