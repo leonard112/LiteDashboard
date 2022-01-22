@@ -1,16 +1,13 @@
 language: bash
-dist: bionic
+dist: focal
 services:
   - docker
-
-jobs:
-  include:
-    - arch: amd64
-      env:
-        - ARCH=amd64
-    - arch: arm64
-      env:
-        - ARCH=arm64
-        
+env:
+  - DOCKER_CLI_EXPERIMENTAL=enabled    
+before_script:
+  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  - docker buildx create --name builder --platform linux/amd64,linux/arm64,linux/arm
+  - docker buildx use builder
+  - docker buildx inspect --bootstrap
 script:
-  - docker build . --tag litedashboard:1.5-$ARCH
+  - docker buildx build --platform linux/amd64,linux/arm64,linux/arm -t carcaral47/litedashboard:1.5 . --push
