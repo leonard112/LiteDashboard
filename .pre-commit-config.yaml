@@ -2,5 +2,5 @@
     hooks:
     -   id: autopep8
         name: autopep8
-        entry: autopep8 --in-place --exclude="*.js,*.yaml,*.yml" -a -a -a src/dashboard.py
+        entry: autopep8 --in-place --exclude="*.js,*.yaml,*.yml,*.html" -a -a -a src/dashboard.py
         language: system

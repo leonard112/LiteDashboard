@@ -3,7 +3,7 @@ dist: bionic
 services:
   - docker
 env:
-  - VERSION=1.5.1
+  - VERSION=1.5.2
 
 jobs:
   include:
